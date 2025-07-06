@@ -1,8 +1,7 @@
-package main 
+package main
 
 import (
 	"os"
-	"log"
 
 	"github.com/labstack/echo/v4"
 

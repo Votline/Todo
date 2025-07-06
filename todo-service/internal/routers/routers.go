@@ -9,7 +9,7 @@ import (
 	"todo-service/internal/handlers"
 )
 
-func Setup(e *echo) {
+func Setup(e *echo.Echo) {
 	origin := os.Getenv("CORS_ALLOW_ORIGINS")
 
 	e.Use(mdwr.CORSWithConfig(mdwr.CORSConfig{
