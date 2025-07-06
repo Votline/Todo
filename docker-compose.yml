@@ -17,3 +17,5 @@ services:
       - "${TODO_PORT}:${TODO_PORT}"
     env_file:
       - ./todo-service/.env
+    depends_on:
+      - postgres

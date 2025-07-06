@@ -21,5 +21,5 @@ func Setup(e *echo.Echo) {
 	}))
 
 	open := e.Group("api/todos")
-	open.GET("/", handlers.Hello)
+	open.POST("/reg", handlers.AddUser)
 }
