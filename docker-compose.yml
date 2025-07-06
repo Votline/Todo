@@ -1,5 +1,15 @@
 
 services:
+  postgres:
+    image: postgres:17
+    container_name: db
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    restart: unless-stopped
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    env_file:
+      - ./todo-service/.env
   todo-service:
     build: ./todo-service
     container_name: todo-service
