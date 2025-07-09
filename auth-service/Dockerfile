@@ -1,6 +1,6 @@
 FROM golang:1.24.4-alpine
 
-WORKDIR /todo-service
+WORKDIR /auth-service
 
 COPY go.mod go.sum /
 RUN go mod download

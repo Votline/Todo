@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "auth-service/pb;auth";
+
+service AuthService {
+    rpc HashPd (HashReq) returns (HashRes);
+    rpc GenJWT (JWTReq) returns (JWTRes);
+    rpc ComparePd (CompareReq) returns (CompareRes);
+    rpc ExtUserID (ExtReq) returns (ExtRes);
+}
+
+message HashReq {
+    string password = 1;
+}
+
+message HashRes {
+    string hash = 1;
+}
+
+message JWTReq {
+    string userID = 1;
+}
+
+message JWTRes {
+    string token = 1;
+}
+
+message CompareReq {
+    string password = 1;
+    string hash = 2;
+}
+
+message CompareRes {
+    bool compare = 1;
+}
+
+message ExtReq {
+    string token = 1;
+}
+
+message ExtRes {
+    string userID = 1;
+}

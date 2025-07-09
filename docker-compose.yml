@@ -19,3 +19,10 @@ services:
       - ./todo-service/.env
     depends_on:
       - postgres
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "${AUTH_PORT}:${AUTH_PORT}"
+    env_file:
+      - ./auth-service/.env
