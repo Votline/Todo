@@ -11,7 +11,9 @@ services:
     env_file:
       - ./todo-service/.env
   todo-service:
-    build: ./todo-service
+    build:
+      context: .
+      dockerfile: ./todo-service/Dockerfile
     container_name: todo-service
     ports:
       - "${TODO_PORT}:${TODO_PORT}"
@@ -19,6 +21,7 @@ services:
       - ./todo-service/.env
     depends_on:
       - postgres
+      - auth-service
   auth-service:
     build: ./auth-service
     container_name: auth-service

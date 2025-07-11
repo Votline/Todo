@@ -3,40 +3,52 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 
-	"todo-service/internal/db"
-//	"todo-service/internal/auth"
 	"todo-service/internal/repo"
 	"todo-service/internal/models"
+	
+	auth "todo/auth-service/pb"
 )
 
+type Handler struct {
+	AuthClient auth.AuthServiceClient
+	Tdb *sqlx.DB
+	Trs *repo.TodoRepoSql
+}
 
-var tdb = db.InitDB()
-var trs = repo.NewTRS(tdb)
-
-func AddUser(c echo.Context) error {
+func (h *Handler) AddUser(c echo.Context) error {
+	ctx := c.Request().Context()
 	var user models.User
 	if err := c.Bind(&user); err != nil {
 		return echo.NewHTTPError(
 			http.StatusBadRequest, "Invalid fields")
 	}
 
-	var err error
-/*	if user.PdHash, err = auth.HashPd(user.PdHash); err != nil {
+	hashRes, err := h.AuthClient.HashPd(ctx, &auth.HashReq{Password: user.PdHash})
+	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
 			"Hash password error\n" + err.Error())
 	}
-*/
-	if err = trs.AddUser(user); err != nil {
+	user.PdHash = hashRes.Hash
+
+	if err = h.Trs.AddUser(user); err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
 			"Error adding a user to the db\n" + err.Error())
 	}
 
+	token, err := h.AuthClient.GenJWT(
+		ctx, &auth.JWTReq{UserID: user.Id})
+	if err != nil {
+		return echo.NewHTTPError(
+			http.StatusInternalServerError,
+			"Error generating the JWT token\n" + err.Error())
+	}
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "Successfully added user",
-		"token": "JWT token",
+		"token": token.Token,
 	})
 }

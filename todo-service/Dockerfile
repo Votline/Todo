@@ -1,12 +1,13 @@
 FROM golang:1.24.4-alpine
 
-WORKDIR /todo-service
-
-COPY go.mod go.sum /
-RUN go mod download
+WORKDIR /app
 
 COPY . .
 
-RUN go build -o main .
+WORKDIR /app/todo-service
 
-CMD ["./main"]
+RUN go mod download
+
+RUN go build -o todo-service .
+
+CMD ["./todo-service"]
