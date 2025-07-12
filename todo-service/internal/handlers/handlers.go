@@ -52,3 +52,7 @@ func (h *Handler) AddUser(c echo.Context) error {
 		"token": token.Token,
 	})
 }
+
+func (h *Handler) AddTask(c echo.Context) error {
+	return c.String(http.StatusOK, c.Get("userID").(string))
+}
