@@ -31,3 +31,19 @@ func (trs *TodoRepoSql) AddUser(user models.User) error {
 	_, err = trs.db.Exec(query, args...)
 	return err
 }
+
+func (trs *TodoRepoSql) AddTask(task *models.Task, userID string) error {
+	query, args, err := trs.bd.
+		Insert("tasks").
+		Columns(
+			"user_id", "title",
+			"content", "category_id", "done").
+		Values(
+			userID, task.Title,
+			task.Content, task.Category, task.Done).
+		Suffix("RETURNING task_id").
+		ToSql()
+	if err != nil {return err}
+
+	return trs.db.QueryRow(query, args...).Scan(&task.TaskID)
+}

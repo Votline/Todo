@@ -54,5 +54,27 @@ func (h *Handler) AddUser(c echo.Context) error {
 }
 
 func (h *Handler) AddTask(c echo.Context) error {
-	return c.String(http.StatusOK, c.Get("userID").(string))
+	userID, ok := c.Get("userID").(string)
+	if !ok {
+		return echo.NewHTTPError (
+			http.StatusUnauthorized, "Invalid user id")
+	}
+
+	var task models.Task
+	if err := c.Bind(&task); err != nil {
+		return echo.NewHTTPError (
+			http.StatusBadRequest,
+			"Invalid task:\n" + err.Error())
+	}
+
+	if err := h.Trs.AddTask(&task, userID); err != nil {
+		return echo.NewHTTPError (
+			http.StatusInternalServerError,
+			"error adding a task to the db:\n" + err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Task successfully added",
+		"task": task,
+	})
 }
