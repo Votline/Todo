@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS tasks (
     user_id     TEXT NOT NULL,
-    task_id     SERIAL,
+    task_id     INTEGER UNIQUE,
     title       TEXT NOT NULL,
     content     TEXT NOT NULL,
     category_id TEXT NOT NULL,

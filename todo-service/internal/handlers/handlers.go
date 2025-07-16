@@ -53,7 +53,7 @@ func (h *Handler) AddUser(c echo.Context) error {
 	})
 }
 
-func (h *Handler) AddTask(c echo.Context) error {
+func (h *Handler) AddOrUpdTask(c echo.Context) error {
 	userID, ok := c.Get("userID").(string)
 	if !ok {
 		return echo.NewHTTPError (
@@ -67,7 +67,7 @@ func (h *Handler) AddTask(c echo.Context) error {
 			"Invalid task:\n" + err.Error())
 	}
 
-	if err := h.Trs.AddTask(&task, userID); err != nil {
+	if err := h.Trs.AddOrUpdTask(&task, userID); err != nil {
 		return echo.NewHTTPError (
 			http.StatusInternalServerError,
 			"error adding a task to the db:\n" + err.Error())

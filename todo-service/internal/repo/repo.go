@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	sq "github.com/Masterminds/squirrel"
 
@@ -32,16 +34,32 @@ func (trs *TodoRepoSql) AddUser(user models.User) error {
 	return err
 }
 
-func (trs *TodoRepoSql) AddTask(task *models.Task, userID string) error {
+func (trs *TodoRepoSql) AddOrUpdTask(task *models.Task, userID string) error {
+	var taskIDPart interface{}
+	if task.TaskID != 0 {
+		taskIDPart = task.TaskID
+	} else {
+		taskIDPart = sq.Expr(`COALESCE((SELECT MAX(task_id) +1 
+			FROM tasks WHERE user_id = ?), 1)`, userID)
+	}
+	fmt.Printf("\n\n\n%v\n%v\n\n\n", taskIDPart, task.TaskID)
 	query, args, err := trs.bd.
 		Insert("tasks").
 		Columns(
-			"user_id", "title",
-			"content", "category_id", "done").
+			"user_id", "task_id",
+			"title", "content", "category_id", "done").
 		Values(
-			userID, task.Title,
-			task.Content, task.Category, task.Done).
-		Suffix("RETURNING task_id").
+			userID, taskIDPart,
+			task.Title, task.Content, task.Category, task.Done).
+		Suffix(`
+			ON CONFLICT (user_id, task_id) DO UPDATE SET
+				title = EXCLUDED.title,
+				content = EXCLUDED.content,
+				category_id = EXCLUDED.category_id,
+				done = EXCLUDED.done
+			RETURNING task_id
+
+		`).
 		ToSql()
 	if err != nil {return err}
 

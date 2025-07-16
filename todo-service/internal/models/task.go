@@ -1,7 +1,7 @@
 package models
 
 type Task struct {
-	TaskID   int    `db:"task_id"`
+	TaskID   int    `db:"task_id"  json:"task_id,omitempty"`
 	UserID   string `db:"user_id"  json:"-"`
 	Title    string `db:"title"    json:"title"`
 	Content  string `db:"content"  json:"content"`
