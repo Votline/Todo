@@ -43,7 +43,8 @@ func extTask(c echo.Context, task *models.Task, userID *string) (map[string]inte
 			return map[string]interface{}{field: value}, nil
 		}
 	}
-	return nil, nil
+	return nil, echo.NewHTTPError(
+		http.StatusBadRequest, "Invalid or missing fields")
 }
 
 func (h *Handler) AddUser(c echo.Context) error {
