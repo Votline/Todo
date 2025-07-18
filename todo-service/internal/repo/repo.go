@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"fmt"
-
 	"github.com/jmoiron/sqlx"
 	sq "github.com/Masterminds/squirrel"
 
@@ -36,13 +34,13 @@ func (trs *TodoRepoSql) AddUser(user models.User) error {
 
 func (trs *TodoRepoSql) AddOrUpdTask(task *models.Task, userID string) error {
 	var taskIDPart interface{}
-	if task.TaskID != 0 {
-		taskIDPart = task.TaskID
+	if task.ID != nil && *task.ID != 0 {
+		taskIDPart = task.ID
 	} else {
 		taskIDPart = sq.Expr(`COALESCE((SELECT MAX(task_id) +1 
 			FROM tasks WHERE user_id = ?), 1)`, userID)
 	}
-	fmt.Printf("\n\n\n%v\n%v\n\n\n", taskIDPart, task.TaskID)
+	
 	query, args, err := trs.bd.
 		Insert("tasks").
 		Columns(
@@ -63,5 +61,30 @@ func (trs *TodoRepoSql) AddOrUpdTask(task *models.Task, userID string) error {
 		ToSql()
 	if err != nil {return err}
 
-	return trs.db.QueryRow(query, args...).Scan(&task.TaskID)
+	return trs.db.QueryRow(query, args...).Scan(&task.ID)
+}
+
+func (trs *TodoRepoSql) GetTask(userID string, task models.Task, conditions map[string]interface{}) ([]models.Task, error) {
+	qb := trs.bd.Select("*").From("tasks").Where(sq.Eq{"user_id": userID})
+
+	for field, value := range conditions {
+		qb = qb.Where(sq.Eq{field: value})
+	}
+	query, args, err := qb.ToSql()
+	if err != nil {return nil, err}
+	
+	var rows *sqlx.Rows
+	rows, err = trs.db.Queryx(query, args...)
+	if err != nil {return nil, err}
+
+	var tasks []models.Task
+	var newTask models.Task
+	for rows.Next() {
+		if err := rows.StructScan(&newTask); err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, newTask)
+	}
+	rows.Close()
+	return tasks, nil
 }

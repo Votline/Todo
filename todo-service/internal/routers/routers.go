@@ -34,5 +34,7 @@ func Setup(e *echo.Echo, h *handlers.Handler) {
 	e.Use(jwtMdwr)
 	e.Use(authMw.HandleError)
 	e.POST("api/todos/reg", h.AddUser)
+	
+	e.GET("api/todos/task", h.GetTask)
 	e.POST("api/todos/task", h.AddOrUpdTask)
 }

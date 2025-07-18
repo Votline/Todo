@@ -18,6 +18,34 @@ type Handler struct {
 	Trs *repo.TodoRepoSql
 }
 
+func extTask(c echo.Context, task *models.Task, userID *string) (map[string]interface{}, error) {
+	uid, ok := c.Get("userID").(string)
+	if !ok {
+		return nil, echo.NewHTTPError(
+			http.StatusUnauthorized, "Invalid user id")
+	}
+	*userID = uid
+
+	if err := c.Bind(task); err != nil {
+		return nil, echo.NewHTTPError(
+			http.StatusBadRequest,
+			"Invalid request data:\n" + err.Error())
+	}
+
+	fields := map[string]interface{}{
+		"task_id": task.ID,
+		"title": task.Title,
+		"category_id": task.Category,
+		"done": task.Done,
+	}
+	for _, field := range []string{"task_id", "title", "category_id", "done"} {
+		if value := fields[field]; value != nil {
+			return map[string]interface{}{field: value}, nil
+		}
+	}
+	return nil, nil
+}
+
 func (h *Handler) AddUser(c echo.Context) error {
 	ctx := c.Request().Context()
 	var user models.User
@@ -48,24 +76,14 @@ func (h *Handler) AddUser(c echo.Context) error {
 			"Error generating the JWT token\n" + err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]string{
-		"message": "Successfully added user",
 		"token": token.Token,
 	})
 }
 
 func (h *Handler) AddOrUpdTask(c echo.Context) error {
-	userID, ok := c.Get("userID").(string)
-	if !ok {
-		return echo.NewHTTPError (
-			http.StatusUnauthorized, "Invalid user id")
-	}
-
+	var userID string
 	var task models.Task
-	if err := c.Bind(&task); err != nil {
-		return echo.NewHTTPError (
-			http.StatusBadRequest,
-			"Invalid task:\n" + err.Error())
-	}
+	if _, err := extTask(c, &task,&userID); err != nil {return err}
 
 	if err := h.Trs.AddOrUpdTask(&task, userID); err != nil {
 		return echo.NewHTTPError (
@@ -76,5 +94,28 @@ func (h *Handler) AddOrUpdTask(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "Task successfully added",
 		"task": task,
+	})
+}
+
+func (h *Handler) GetTask(c echo.Context) error {
+	var userID string
+	var task models.Task
+	found, err := extTask(c, &task, &userID)
+	if err != nil {return err}
+
+	tasks, err := h.Trs.GetTask(userID, task, found);
+	if err != nil {
+		return echo.NewHTTPError(
+			http.StatusInternalServerError,
+			"error when getting a task from the database:\n"+ err.Error())
+	}
+
+	if len(tasks) == 0 {
+		return echo.NewHTTPError(
+			http.StatusNotFound, "No tasks found")
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"tasks": tasks,
 	})
 }
