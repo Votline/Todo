@@ -37,4 +37,5 @@ func Setup(e *echo.Echo, h *handlers.Handler) {
 	
 	e.GET("api/todos/task", h.GetTask)
 	e.POST("api/todos/task", h.AddOrUpdTask)
+	e.DELETE("api/todos/task", h.DelTask)
 }

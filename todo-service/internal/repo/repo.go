@@ -88,3 +88,15 @@ func (trs *TodoRepoSql) GetTask(userID string, task models.Task, conditions map[
 	rows.Close()
 	return tasks, nil
 }
+
+func (trs *TodoRepoSql) DelTask(userID string, taskID int) error{
+	query, args, err := trs.bd.
+		Delete("tasks").
+		Where(sq.Eq{"user_id": userID}).
+		Where(sq.Eq{"task_id": taskID}).
+		ToSql()
+	if err != nil {return err}
+
+	_, err = trs.db.Exec(query, args...)
+	return err
+}
